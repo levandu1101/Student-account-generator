@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Immersive Learning – Học sinh Import Generator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',system-ui,sans-serif;background:#f6f5f1;color:#1c1a17;min-height:100vh;line-height:1.6}
+.hd{background:#fff;border-bottom:1px solid #e2dfd6;padding:0 2rem;position:sticky;top:0;z-index:100}
+.hd-inner{max-width:980px;margin:0 auto;height:58px;display:flex;align-items:center;gap:.75rem}
+.logo{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,#059669,#10b981);display:flex;align-items:center;justify-content:center;color:#fff;font-size:.75rem;font-weight:700}
+.hd-title{font-size:.95rem;font-weight:600}
+.main{max-width:980px;margin:0 auto;padding:2rem 1.5rem 6rem}
+.card{background:#fff;border:1px solid #e2dfd6;border-radius:10px;box-shadow:0 1px 3px rgba(0,0,0,.05);margin-bottom:1.25rem;overflow:hidden}
+.card-head{padding:1.1rem 1.5rem;border-bottom:1px solid #e2dfd6;display:flex;align-items:center;gap:.75rem;background:#faf9f6}
+.step{width:26px;height:26px;border-radius:50%;background:#059669;color:#fff;font-size:.78rem;font-weight:600;display:flex;align-items:center;justify-content:center}
+.card-title{font-size:.9rem;font-weight:600}
+.card-body{padding:1.25rem 1.5rem}
+.dropz{border:2px dashed #ccc9be;border-radius:10px;padding:2.5rem 2rem;text-align:center;cursor:pointer;background:#f0efe9;position:relative}
+.dropz:hover{border-color:#059669;background:#ecfdf5}
+.dropz input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:.875rem}
+.ff{display:flex;flex-direction:column;gap:.3rem}
+label{font-size:.78rem;font-weight:500;color:#6b6760}
+input[type=file]{font-size:.8rem;cursor:pointer}
+input[type=text], input[type=number], select{padding:.45rem .75rem;border:1px solid #e2dfd6;border-radius:6px;font-size:.875rem;font-family:inherit;outline:none}
+input:focus, select:focus{border-color:#059669;box-shadow:0 0 0 3px rgba(16,185,129,.15)}
+.mt{width:100%;border-collapse:collapse;margin-top:1rem}
+.mt th{text-align:left;font-size:.72rem;color:#6b6760;padding:.5rem;background:#f0efe9}
+.mt td{padding:.3rem;border-bottom:1px solid #e2dfd6}
+.mt-inp{width:100%;padding:.35rem;border:1px solid #e2dfd6;border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:.83rem}
+.btn{display:inline-flex;align-items:center;gap:.45rem;padding:.45rem .9rem;border-radius:6px;font-size:.835rem;font-weight:500;cursor:pointer;border:1px solid transparent;background:#059669;color:#fff}
+.btn:hover{background:#047857}
+.btn-sec{background:#fff;color:#1c1a17;border-color:#e2dfd6}
+.btn-sec:hover{background:#f0efe9}
+.pt{width:100%;border-collapse:collapse;font-size:.75rem;white-space:nowrap;margin-top:1rem}
+.pt th{background:#f0efe9;padding:.45rem .7rem;text-align:left;border-bottom:1px solid #e2dfd6;color:#6b6760}
+.pt td{padding:.35rem .7rem;border-bottom:1px solid #e2dfd6;font-family:'JetBrains Mono',monospace}
+.radio-group{display:flex;flex-direction:column;gap:.4rem}
+.radio-opt{display:flex;align-items:flex-start;gap:.5rem;cursor:pointer;font-size:.83rem}
+.radio-opt input{margin-top:.2rem;accent-color:#059669}
+.log{background:#1a1917;color:#e5e2da;padding:1rem;border-radius:6px;font-family:'JetBrains Mono',monospace;font-size:.78rem;margin-top:1rem;display:none;max-height:200px;overflow-y:auto}
+</style>
+</head>
+<body>
+
+<header class="hd">
+  <div class="hd-inner">
+    <div class="logo">IMM</div>
+    <span class="hd-title">Student (HS) Import Generator</span>
+  </div>
+</header>
+
+<main class="main">
+  <!-- Step 1 -->
+  <div class="card">
+    <div class="card-head"><span class="step">1</span><span class="card-title">Upload Data Files</span></div>
+    <div class="card-body">
+      <!-- 1. Main File -->
+      <div id="dropz" class="dropz" style="padding:1.5rem">
+        <input type="file" id="file-inp" accept=".xlsx,.xls"/>
+        <div style="font-weight:500">1. Drop Current Year's Học Sinh Excel here (Required)</div>
+      </div>
+      <div id="file-ok" style="display:none;color:#059669;font-weight:500;margin-top:.5rem"></div>
+      
+      <!-- 2. Reference File (Optional) -->
+      <div style="margin-top:1.5rem; border-top:1px solid #e2dfd6; padding-top:1.5rem">
+        <label style="display:block;margin-bottom:.3rem;font-weight:600;color:#059669">2. Reference Data (Optional) - Reuse last year's usernames</label>
+        <div style="font-size:0.75rem;color:#6b6760;margin-bottom:.5rem">Upload last year's Excel/CSV to reuse existing student usernames.</div>
+        <input type="file" id="ref-inp" accept=".xlsx,.xls,.csv" style="width:100%"/>
+        <div id="ref-ok" style="display:none;color:#059669;font-weight:500;margin-top:.5rem"></div>
+      </div>
+
+      <!-- 3. Global Users (Optional) -->
+      <div style="margin-top:1.5rem; border-top:1px solid #e2dfd6; padding-top:1.5rem">
+        <label style="display:block;margin-bottom:.3rem;font-weight:600;color:#b91c1c">3. Global Blacklist (Optional) - Prevent duplicate usernames</label>
+        <div style="font-size:0.75rem;color:#6b6760;margin-bottom:.5rem">Upload <code>Users.csv</code> downloaded from Moodle to automatically append numbers to duplicates.</div>
+        <input type="file" id="users-inp" accept=".csv,.xlsx" style="width:100%"/>
+        <div id="users-ok" style="display:none;color:#b91c1c;font-weight:500;margin-top:.5rem"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Step 2 -->
+  <div class="card">
+    <div class="card-head"><span class="step">2</span><span class="card-title">Configuration</span></div>
+    <div class="card-body">
+      <div class="fg">
+        <div class="ff"><label>School Short Name</label><input type="text" id="cfg-school" value="LTV(1)"/></div>
+        <div class="ff"><label>Academic Year</label><input type="text" id="cfg-year" value="2026"/></div>
+        <div class="ff"><label>Cohort 1</label><input type="text" id="cfg-cohort1" value="26_IMMERSIVE_students"/></div>
+        <div class="ff">
+          <label>School Level (for email)</label>
+          <select id="cfg-level">
+            <option value="p">Primary (p)</option>
+            <option value="ls">Lower Secondary (ls)</option>
+          </select>
+        </div>
+        <div class="ff"><label>Starting Number (for dummy email)</label><input type="number" id="cfg-startnum" value="1"/></div>
+      </div>
+      
+      <div style="margin-top:1.5rem">
+        <label style="display:block;margin-bottom:.5rem">Fallback Username Strategy (If no 'Tên đăng nhập' in file)</label>
+        <div class="radio-group">
+          <label class="radio-opt">
+            <input type="radio" name="uname-strat" value="name-year" checked/>
+            <div>Tên + Initials + Year (e.g. <code>honglm26</code>)</div>
+          </label>
+          <label class="radio-opt">
+            <input type="radio" name="uname-strat" value="email-prefix"/>
+            <div>Dummy Email Prefix (e.g. <code>180826_p_immersive_001</code>)</div>
+          </label>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Step 3 -->
+  <div class="card">
+    <div class="card-head"><span class="step">3</span><span class="card-title">Class Mapping</span></div>
+    <div class="card-body">
+      <div style="font-size:0.83rem;color:#6b6760">Map class codes (e.g. <code>1/2</code> or <code>1A2</code>) to platform format (e.g. <code>1.2</code>). Auto-detected on upload.</div>
+      <table class="mt">
+        <thead><tr><th>Raw Class</th><th></th><th>Platform Name</th><th>Grade</th></tr></thead>
+        <tbody id="mt-body"></tbody>
+      </table>
+      <button class="btn btn-sec" style="margin-top:1rem" onclick="addRow()">+ Add Row</button>
+    </div>
+  </div>
+
+  <!-- Step 4 -->
+  <div class="card">
+    <div class="card-head"><span class="step">4</span><span class="card-title">Generate</span></div>
+    <div class="card-body">
+      <div style="display:flex;gap:1rem">
+        <button class="btn btn-sec" onclick="run(false)">Preview 10 Rows</button>
+        <button class="btn" id="dl-btn" onclick="run(true, 'csv')" disabled>Download CSV</button>
+        <button class="btn" id="dl-excel-btn" style="background:#eab308; color:#000" onclick="run(true, 'excel')" disabled>Download Highlighted Excel</button>
+      </div>
+      <div id="log" class="log"></div>
+      <div style="overflow-x:auto"><table class="pt" id="pt"></table></div>
+    </div>
+  </div>
+</main>
+
+<script>
+let students = [], mapRows = [], rowId = 0;
+let refStudents = [];
+let highlightedRows = new Set();
+let globalUsernames = new Set();
+
+// --- Event Listeners ---
+document.getElementById('file-inp').addEventListener('change', e => {
+  const f = e.target.files[0]; if (f) loadFile(f);
+});
+document.getElementById('ref-inp').addEventListener('change', e => {
+  const f = e.target.files[0]; if (f) loadRefFile(f);
+});
+document.getElementById('users-inp').addEventListener('change', e => {
+  const f = e.target.files[0]; if (f) loadUsersFile(f);
+});
+
+// --- 1. Load Main Data File ---
+function loadFile(file) {
+  const rd = new FileReader();
+  rd.onload = e => {
+    try {
+      const wb = XLSX.read(e.target.result, { type: 'array' });
+      students = [];
+      for (const sheetName of wb.SheetNames) {
+        const rows = XLSX.utils.sheet_to_json(wb.Sheets[sheetName], { header: 1, defval: null });
+        parseData(rows, sheetName);
+      }
+      if (students.length === 0) throw new Error("No student data found! Ensure 'Họ tên' or 'Họ và tên' headers are present.");
+      const okDiv = document.getElementById('file-ok');
+      okDiv.style.display = 'block';
+      okDiv.innerText = `✓ Loaded ${students.length} students from ${wb.SheetNames.length} sheets`;
+      autoDetectClasses();
+    } catch (err) { alert(err.message); }
+  };
+  rd.readAsArrayBuffer(file);
+}
+
+function parseData(rows, sheetName) {
+  let hRow = -1, cHo = -1;
+  
+  for (let i = 0; i < Math.min(rows.length, 15); i++) {
+    const r = rows[i]; if (!r) continue;
+    for (let j = 0; j < r.length; j++) {
+      const v = String(r[j] || '').toLowerCase().replace(/\s+/g, ' ').trim();
+      if (v.includes('tên đệm') || v.includes('họ và tên') || v.includes('họ tên') || v.includes('ho va ten') || v.includes('họ & tên')) {
+        hRow = i; cHo = j; break;
+      }
+    }
+    if (hRow !== -1) break; 
+  }
+  
+  if (hRow === -1) return; 
+
+  let cTen = -1, cDob = -1, cCls = -1, cUname = -1, cPwd = -1;
+  let cDay = -1, cMonth = -1, cYear = -1;
+  
+  // Increased scan range to 3 rows to catch highly spread headers
+  const rowsToCheck = [];
+  for (let i = hRow; i < Math.min(rows.length, hRow + 3); i++) {
+    if (rows[i]) rowsToCheck.push(rows[i]);
+  }
+  
+  for (const r of rowsToCheck) {
+    for (let j = 0; j < r.length; j++) {
+      const v = String(r[j] || '').toLowerCase().replace(/\s+/g, ' ').trim();
+      if (!v) continue;
+      
+      if (v === 'tên') { if (cTen === -1) cTen = j; }
+      else if (v === 'ngày' || v === 'ngay' || v === 'ngày sinh') { if (cDay === -1) cDay = j; }
+      else if (v === 'tháng' || v === 'thang' || v === 'tháng sinh' || v === 'thg' || v === 'month') { if (cMonth === -1) cMonth = j; }
+      else if (v === 'năm' || v === 'nam' || v === 'năm sinh') { if (cYear === -1) cYear = j; }
+      else if (v.includes('sinh') || v.includes('dob')) { if (cDob === -1) cDob = j; }
+      else if (v === 'lớp' || v === 'lop' || v.includes('class')) { if (cCls === -1) cCls = j; }
+      else if (v.includes('đăng nhập') || v.includes('username') || v.includes('tài khoản') || v.includes('dang nhap') || v.includes('tai khoan') || v === 'account' || v.includes('user name')) { 
+        if (cUname === -1) cUname = j; 
+      }
+      else if (v.includes('mật khẩu') || v.includes('password') || v.includes('mat khau') || v === 'pass') {
+        if (cPwd === -1) cPwd = j;
+      }
+    }
+  }
+  
+  let dataStartRow = hRow + 1;
+  if (hRow + 1 < rows.length) {
+    const nextR = rows[hRow + 1];
+    let isHeader = false;
+    for (let j = 0; j < nextR.length; j++) {
+      const v2 = String(nextR[j] || '').toLowerCase().replace(/\s+/g, ' ').trim();
+      if (!v2) continue;
+      if (v2.includes('đăng nhập') || v2.includes('tài khoản') || v2.includes('mật khẩu') || v2.includes('password') || v2 === 'lớp' || v2.includes('class') || v2 === 'pass') {
+         isHeader = true; break;
+      }
+    }
+    if (isHeader) dataStartRow = hRow + 2;
+  }
+  
+  for (let i = dataStartRow; i < rows.length; i++) {
+    const r = rows[i]; if (!r) continue;
+    
+    let ho = String(r[cHo] || '').trim();
+    if (!ho || ho.toLowerCase().includes('họ và tên')) continue; 
+    
+    let ten = cTen !== -1 ? String(r[cTen] || '').trim() : '';
+    
+    if (cTen === -1 && ho) {
+      const parts = ho.split(/\s+/);
+      if (parts.length > 1) { ten = parts.pop(); ho = parts.join(' '); } 
+      else { ten = ho; ho = ''; }
+    }
+    
+    let date = { d: 1, m: 1, y: 2018 }; 
+    let dStr = '';
+    let dateParsed = false;
+    
+    // Strategy 1: Attempt to parse combined cell (e.g. 15/11/2011)
+    if (cDob !== -1 && r[cDob]) {
+      const dRaw = r[cDob];
+      if (typeof dRaw === 'number' && dRaw > 10000) {
+        const d = new Date(Math.round((dRaw - 25569) * 86400 * 1000));
+        date = { d: d.getDate(), m: d.getMonth() + 1, y: d.getFullYear() };
+        dateParsed = true;
+      } else {
+        const str = String(dRaw).trim();
+        let m = str.match(/(\d{1,2})\s*[\/\-\.]\s*(\d{1,2})\s*[\/\-\.]\s*(\d{2,4})/);
+        if (m) {
+          let y = parseInt(m[3], 10); if (y < 100) y += (y > 30 ? 1900 : 2000);
+          date = { d: parseInt(m[1], 10), m: parseInt(m[2], 10), y };
+          dateParsed = true;
+        } else {
+          m = str.match(/(\d{1,2})\s*[\/\-\.]\s*(\d{1,2})/);
+          if (m) {
+            let y = cYear !== -1 && r[cYear] ? parseInt(String(r[cYear]).replace(/\D/g, ''), 10) : 2018;
+            if (isNaN(y)) y = 2018;
+            if (y < 100) y += (y > 30 ? 1900 : 2000);
+            date = { d: parseInt(m[1], 10), m: parseInt(m[2], 10), y };
+            dateParsed = true;
+          }
+        }
+      }
+    }
+    
+    // Strategy 2: Check explicit "Ngày", "Tháng", "Năm" headers
+    if (!dateParsed && cMonth !== -1 && r[cMonth]) {
+      let mNum = parseInt(String(r[cMonth]).replace(/\D/g, ''), 10);
+      let dNum = cDay !== -1 && r[cDay] ? parseInt(String(r[cDay]).replace(/\D/g, ''), 10) : 1;
+      let yNum = cYear !== -1 && r[cYear] ? parseInt(String(r[cYear]).replace(/\D/g, ''), 10) : 2018;
+      
+      if (!isNaN(mNum) && mNum >= 1 && mNum <= 12) {
+         if (isNaN(dNum) || dNum < 1) dNum = 1;
+         if (isNaN(yNum)) yNum = 2018;
+         if (yNum < 100) yNum += (yNum > 30 ? 1900 : 2000);
+         date = { d: dNum, m: mNum, y: yNum };
+         dateParsed = true;
+      }
+    }
+    
+    // Strategy 3 (FOOLPROOF): If headers were weirdly formatted and missed, assume columns right next to "Ngày sinh" are Month and Year!
+    if (!dateParsed && cDob !== -1) {
+      const dVal = r[cDob];
+      const mVal = r[cDob + 1];
+      const yVal = r[cDob + 2];
+      
+      if (dVal && mVal) {
+        let dNum = parseInt(String(dVal).replace(/\D/g, ''), 10);
+        let mNum = parseInt(String(mVal).replace(/\D/g, ''), 10);
+        let yNum = yVal ? parseInt(String(yVal).replace(/\D/g, ''), 10) : 2018;
+        
+        // Ensure they look like real dates
+        if (!isNaN(mNum) && mNum >= 1 && mNum <= 12 && !isNaN(dNum)) {
+           if (dNum < 1) dNum = 1;
+           if (isNaN(yNum)) yNum = 2018;
+           if (yNum < 100) yNum += (yNum > 30 ? 1900 : 2000);
+           date = { d: dNum, m: mNum, y: yNum };
+           dateParsed = true;
+        }
+      }
+    }
+    
+    dStr = `${date.d}/${date.m}/${date.y}`;
+    
+    let rawCls = cCls !== -1 ? String(r[cCls] || '').trim() : '';
+    if (!rawCls) {
+       const sm = sheetName.match(/\d+[a-zA-Z\/\.]\d+/);
+       rawCls = sm ? sm[0] : sheetName.replace(/^l[ớo]p\s*/i, '').trim();
+    }
+    
+    let existingUsername = cUname !== -1 ? String(r[cUname] || '').trim() : '';
+    if (existingUsername.startsWith('#')) existingUsername = ''; 
+    
+    let existingPassword = cPwd !== -1 ? String(r[cPwd] || '').trim() : '';
+    if (existingPassword.startsWith('#')) existingPassword = ''; 
+    
+    students.push({ ho, ten, rawCls, date, dStr, existingUsername, existingPassword });
+  }
+}
+
+function loadRefFile(file) {
+  const rd = new FileReader();
+  rd.onload = e => {
+    try {
+      const wb = XLSX.read(e.target.result, { type: 'array' });
+      refStudents = [];
+      for (const sheetName of wb.SheetNames) {
+        const rows = XLSX.utils.sheet_to_json(wb.Sheets[sheetName], { header: 1, defval: null });
+        
+        let hRow = -1, cHo = -1, cTen = -1, cDob = -1, cUname = -1;
+        let cDay = -1, cMonth = -1, cYear = -1;
+        
+        for (let i = 0; i < Math.min(rows.length, 15); i++) {
+          const r = rows[i]; if (!r) continue;
+          for (let j = 0; j < r.length; j++) {
+            const v = String(r[j] || '').toLowerCase().replace(/\s+/g, ' ').trim();
+            if (v.includes('tên đệm') || v.includes('họ và tên') || v.includes('họ tên') || v === 'firstname') { hRow = i; cHo = j; break; }
+          }
+          if (hRow !== -1) break;
+        }
+        if (hRow === -1) continue;
+        
+        const rowsToCheck = [];
+        for (let i = hRow; i < Math.min(rows.length, hRow + 3); i++) {
+          if (rows[i]) rowsToCheck.push(rows[i]);
+        }
+        
+        for (const r of rowsToCheck) {
+          for (let j = 0; j < r.length; j++) {
+            const v = String(r[j] || '').toLowerCase().replace(/\s+/g, ' ').trim();
+            if (!v) continue;
+            
+            if (v === 'tên' || v === 'lastname') { if (cTen === -1) cTen = j; }
+            else if (v === 'ngày' || v === 'ngay' || v === 'ngày sinh') { if (cDay === -1) cDay = j; }
+            else if (v === 'tháng' || v === 'thang' || v === 'tháng sinh' || v === 'thg') { if (cMonth === -1) cMonth = j; }
+            else if (v === 'năm' || v === 'nam' || v === 'năm sinh') { if (cYear === -1) cYear = j; }
+            else if (v.includes('sinh') || v.includes('dob')) { if (cDob === -1) cDob = j; }
+            else if (v.includes('đăng nhập') || v.includes('username') || v.includes('tài khoản')) { if (cUname === -1) cUname = j; }
+          }
+        }
+        
+        for (let i = hRow + 1; i < rows.length; i++) {
+          const r = rows[i]; if (!r) continue;
+          let ho = String(r[cHo] || '').trim();
+          let uname = String(r[cUname] || '').trim();
+          if (!ho || !uname) continue;
+          
+          let ten = cTen !== -1 ? String(r[cTen] || '').trim() : '';
+          if (cTen === -1 && ho) {
+            const parts = ho.split(/\s+/);
+            if (parts.length > 1) { ten = parts.pop(); ho = parts.join(' '); } 
+            else { ten = ho; ho = ''; }
+          }
+          
+          let dStr = '';
+          let dateParsed = false;
+          
+          if (cDob !== -1 && r[cDob]) {
+            const dRaw = r[cDob];
+            if (typeof dRaw === 'number' && dRaw > 10000) {
+              const d = new Date(Math.round((dRaw - 25569) * 86400 * 1000));
+              dStr = `${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}`;
+              dateParsed = true;
+            } else {
+              const str = String(dRaw).trim();
+              let m = str.match(/(\d{1,2})\s*[\/\-\.]\s*(\d{1,2})\s*[\/\-\.]\s*(\d{2,4})/);
+              if (m) {
+                  let y = parseInt(m[3], 10); if (y < 100) y += (y > 30 ? 1900 : 2000);
+                  dStr = `${parseInt(m[1],10)}/${parseInt(m[2],10)}/${y}`;
+                  dateParsed = true;
+              } else {
+                  m = str.match(/(\d{1,2})\s*[\/\-\.]\s*(\d{1,2})/);
+                  if (m) {
+                    let y = cYear !== -1 && r[cYear] ? parseInt(String(r[cYear]).replace(/\D/g, ''), 10) : 2018;
+                    if (isNaN(y)) y = 2018;
+                    if (y < 100) y += (y > 30 ? 1900 : 2000);
+                    dStr = `${parseInt(m[1],10)}/${parseInt(m[2],10)}/${y}`;
+                    dateParsed = true;
+                  }
+              }
+            }
+          }
+          
+          if (!dateParsed && cMonth !== -1 && r[cMonth]) {
+            let mNum = parseInt(String(r[cMonth]).replace(/\D/g, ''), 10);
+            let dNum = cDay !== -1 && r[cDay] ? parseInt(String(r[cDay]).replace(/\D/g, ''), 10) : 1;
+            let yNum = cYear !== -1 && r[cYear] ? parseInt(String(r[cYear]).replace(/\D/g, ''), 10) : 2018;
+            
+            if (!isNaN(mNum) && mNum >= 1 && mNum <= 12) {
+               if (isNaN(dNum) || dNum < 1) dNum = 1;
+               if (isNaN(yNum)) yNum = 2018;
+               if (yNum < 100) yNum += (yNum > 30 ? 1900 : 2000);
+               dStr = `${dNum}/${mNum}/${yNum}`;
+               dateParsed = true;
+            }
+          }
+          
+          if (!dateParsed && cDob !== -1) {
+            const dVal = r[cDob];
+            const mVal = r[cDob + 1];
+            const yVal = r[cDob + 2];
+            if (dVal && mVal) {
+              let dNum = parseInt(String(dVal).replace(/\D/g, ''), 10);
+              let mNum = parseInt(String(mVal).replace(/\D/g, ''), 10);
+              let yNum = yVal ? parseInt(String(yVal).replace(/\D/g, ''), 10) : 2018;
+              if (!isNaN(mNum) && mNum >= 1 && mNum <= 12 && !isNaN(dNum)) {
+                 if (dNum < 1) dNum = 1;
+                 if (isNaN(yNum)) yNum = 2018;
+                 if (yNum < 100) yNum += (yNum > 30 ? 1900 : 2000);
+                 dStr = `${dNum}/${mNum}/${yNum}`;
+                 dateParsed = true;
+              }
+            }
+          }
+          
+          const cleanTen = removeDiacritics(ten).toLowerCase().replace(/\s+/g, '');
+          const cleanHo = removeDiacritics(ho).toLowerCase().replace(/\s+/g, '');
+          refStudents.push({ cleanTen, cleanHo, dStr, username: uname });
+        }
+      }
+      const okDiv = document.getElementById('ref-ok');
+      okDiv.style.display = 'block';
+      okDiv.innerText = `✓ Loaded ${refStudents.length} reference students for matching.`;
+    } catch (err) { alert("Reference file error: " + err.message); }
+  };
+  rd.readAsArrayBuffer(file);
+}
+
+function loadUsersFile(file) {
+  const rd = new FileReader();
+  rd.onload = e => {
+    try {
+      const wb = XLSX.read(e.target.result, { type: 'array' });
+      globalUsernames.clear();
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: null });
+      
+      let cUname = -1;
+      for(let j = 0; j < (rows[0]||[]).length; j++) {
+        if(String(rows[0][j]||'').toLowerCase().trim() === 'username') cUname = j;
+      }
+      if(cUname === -1) throw new Error("Could not find 'username' header in the first row.");
+      
+      for(let i = 1; i < rows.length; i++) {
+        let u = String(rows[i][cUname] || '').trim().toLowerCase();
+        if(u) globalUsernames.add(u);
+      }
+      const okDiv = document.getElementById('users-ok');
+      okDiv.style.display = 'block';
+      okDiv.innerText = `✓ Loaded ${globalUsernames.size} existing Moodle usernames.`;
+    } catch(err) { alert("Users file error: " + err.message); }
+  }
+  rd.readAsArrayBuffer(file);
+}
+
+function addRow(raw = '', tr = '', gr = '') {
+  const id = rowId++;
+  const tb = document.getElementById('mt-body');
+  const row = document.createElement('tr'); row.id = `mr-${id}`;
+  row.innerHTML = `
+    <td><input class="mt-inp" value="${raw}" oninput="updRow(${id},'raw',this.value)"/></td>
+    <td style="text-align:center;color:#6b6760">→</td>
+    <td><input class="mt-inp" value="${tr}" oninput="updRow(${id},'translated',this.value)"/></td>
+    <td><input class="mt-inp" value="${gr}" oninput="updRow(${id},'grade',this.value)"/></td>`;
+  tb.appendChild(row);
+  mapRows.push({ id, raw, translated: tr, grade: gr });
+}
+
+function updRow(id, field, val) {
+  const r = mapRows.find(x => x.id === id); if (!r) return;
+  r[field] = val;
+  if (field === 'raw') {
+    const gm = val.match(/^(\d+)/);
+    if (gm) { r.grade = gm[1]; document.getElementById(`mr-${id}`).querySelector('td:nth-child(4) input').value = gm[1]; }
+    const tm = val.match(/^(\d+)[A\/](\d+)$/i);
+    if (tm && !r.translated) {
+      r.translated = `${tm[1]}.${tm[2]}`; 
+      document.getElementById(`mr-${id}`).querySelector('td:nth-child(3) input').value = r.translated;
+    }
+  }
+}
+
+function autoDetectClasses() {
+  document.getElementById('mt-body').innerHTML = ''; mapRows = [];
+  const found = new Set();
+  for (const s of students) {
+    const matches = Array.from((s.rawCls || '').matchAll(/\d+[A\/\.]\d+/g));
+    if (matches.length > 0) {
+      for (const m of matches) found.add(m[0]);
+    } else if (s.rawCls) {
+      found.add(s.rawCls); 
+    }
+  }
+  for (const code of found) {
+    const m = code.match(/^(\d+)[A\/](\d+)$/);
+    if (m) addRow(code, `${m[1]}.${m[2]}`, m[1]);
+    else addRow(code, code, (code.match(/^(\d+)/)||['',''])[1]);
+  }
+}
+
+function removeDiacritics(str) {
+  return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\u0111/g,'d').replace(/\u0110/g,'D');
+}
+
+const HEADERS = ['username','firstname','lastname','cohort1','cohort2','Institution','Department','password','email','course1','group1','role1','course2','group2','role2','course3','group3','role3'];
+
+function run(download, format = "csv") {
+  if (!students.length) return alert('Please upload Excel file first');
+  
+  const c = {
+    school: document.getElementById('cfg-school').value.trim(),
+    year: document.getElementById('cfg-year').value.trim(),
+    cohort1: document.getElementById('cfg-cohort1').value.trim(),
+    level: document.getElementById('cfg-level').value,
+    startNum: parseInt(document.getElementById('cfg-startnum').value, 10) || 1,
+    uStrat: document.querySelector('input[name="uname-strat"]:checked').value
+  };
+  
+  const YY_cohort = c.year.slice(-2);
+  const today = new Date();
+  const T_DD = String(today.getDate()).padStart(2, '0');
+  const T_MM = String(today.getMonth() + 1).padStart(2, '0');
+  const T_YY = String(today.getFullYear()).slice(-2);
+  const todayPrefix = `${T_DD}${T_MM}${T_YY}`;
+  
+  const map = {};
+  for (const r of mapRows) if (r.raw.trim()) map[r.raw.trim()] = r.translated.trim();
+  
+  let emailCounter = c.startNum;
+  const rows = [];
+  const usedUsernames = new Set(); 
+  let matchCount = 0;
+  
+  for (const s of students) {
+    const DD = String(s.date.d).padStart(2, '0');
+    const MM = String(s.date.m).padStart(2, '0');
+    
+    const cleanTen = removeDiacritics(s.ten).toLowerCase().replace(/\s+/g, '');
+    const cleanHo = removeDiacritics(s.ho).toLowerCase().replace(/\s+/g, ''); 
+    
+    let password = '';
+    if (s.existingPassword) {
+      password = s.existingPassword;
+    } else {
+      password = `${cleanTen}${DD}${MM}`; 
+    }
+    
+    const padded = String(emailCounter++).padStart(3, '0');
+    const email = `${todayPrefix}_${c.level}_immersive_${padded}@emg.edu.vn`;
+    
+    let username = '';
+    let isMatched = false;
+    
+    if (s.existingUsername) {
+      username = s.existingUsername;
+    } else {
+      let matchedRef = refStudents.find(ref => 
+         ref.cleanTen === cleanTen && 
+         ref.cleanHo === cleanHo && 
+         (!ref.dStr || ref.dStr === s.dStr) 
+      );
+      
+      if (matchedRef) {
+         username = matchedRef.username;
+         isMatched = true;
+         matchCount++;
+      } else {
+         if (c.uStrat === 'name-year') {
+           const rawCleanHo = removeDiacritics(s.ho).toLowerCase().trim().split(/\s+/).map(w=>w[0]||'').join('');
+           username = `${cleanTen}${rawCleanHo}${YY_cohort}`.replace(/[^a-z0-9]/g, '');
+         } else {
+           username = email.split('@')[0];
+         }
+      }
+    }
+    
+    let finalUname = username;
+    let counter = 1;
+    if (!isMatched && !s.existingUsername) {
+        while (globalUsernames.has(finalUname.toLowerCase()) || usedUsernames.has(finalUname.toLowerCase())) {
+           finalUname = `${username}${counter}`;
+           counter++;
+        }
+    } else {
+        while (usedUsernames.has(finalUname.toLowerCase())) {
+           finalUname = `${username}${counter}`;
+           counter++;
+        }
+    }
+    
+    usedUsernames.add(finalUname.toLowerCase());
+    username = finalUname;
+    
+    const transCls = map[s.rawCls] || s.rawCls.replace(/^(\d+)[A\/](\d+)$/, '$1.$2');
+    const c2 = `${c.year}_${c.school}_${transCls}`;
+    const grade = (transCls.match(/^(\d+)/)||['','0'])[1];
+    
+    rows.push([
+      username, s.ho, s.ten, c.cohort1, c2, c.cohort1, c2, password, email,
+      `${c.year}_IMMERSIVE_ENGLISH_${grade}`, `${c2}E`, 'student',
+      `${c.year}_IMMERSIVE_MATH_${grade}`, `${c2}M`, 'student',
+      `${c.year}_IMMERSIVE_SCIENCE_${grade}`, `${c2}S`, 'student'
+    ]);
+  }
+  
+  let html = '<thead><tr>' + HEADERS.map(h=>`<th>${h}</th>`).join('') + '</tr></thead><tbody>';
+  for (let i = 0; i < Math.min(10, rows.length); i++) {
+    const r = rows[i];
+    const bg = highlightedRows.has(i) ? 'background-color: #fef08a;' : '';
+    html += '<tr style="' + bg + '">' + r.map(v=>'<td>'+v+'</td>').join('') + '</tr>';
+  }
+  document.getElementById('pt').innerHTML = html + '</tbody>';
+  document.getElementById('dl-btn').disabled = false;
+  document.getElementById('dl-excel-btn').disabled = false;
+  
+  const logDiv = document.getElementById('log');
+  logDiv.style.display = 'block';
+  logDiv.innerHTML = `Successfully processed ${rows.length} students.<br/>`;
+  if (refStudents.length > 0) logDiv.innerHTML += `Matched and reused existing usernames for ${matchCount} students.<br/>`;
+  logDiv.innerHTML += `Ready to download!`;
+  
+  if (download) {
+    const bom = '\uFEFF';
+    const csv = bom + [HEADERS, ...rows].map(r => r.join(',')).join('\r\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; 
+    a.download = `IMM${c.year.slice(-2)} - ${c.school} - Import HS.csv`;
+    a.click(); URL.revokeObjectURL(url);
+  }
+}
+</script>
+</body>
+</html>
