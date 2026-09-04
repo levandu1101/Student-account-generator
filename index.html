@@ -642,7 +642,7 @@ function run(download, format = "csv") {
     const grade = (transCls.match(/^(\d+)/)||['','0'])[1];
     
     rows.push([
-      username, s.ho, s.ten, c.cohort1, c2, c.cohort1, c2, password, email,
+      username, s.ten, s.ho, c.cohort1, c2, c.cohort1, c2, password, email,
       `${c.year}_IMMERSIVE_ENGLISH_${grade}`, `${c2}E`, 'student',
       `${c.year}_IMMERSIVE_MATH_${grade}`, `${c2}M`, 'student',
       `${c.year}_IMMERSIVE_SCIENCE_${grade}`, `${c2}S`, 'student'
